@@ -120,7 +120,7 @@ CLIP zero-shot scoring with a geometric veto from a roof-slope index, on 5 build
   <img src="docs/images/open_plan_savoye.png" alt="Room segmentation of Villa Savoye's plan" width="420"/>
   <img src="docs/images/open_plan_rotonda.png" alt="Room segmentation of Villa Rotonda's plan" width="420"/>
 </p>
-<p align="center"><em>Left: Villa Savoye, largest room non-convex and dominant. Right: Villa Rotonda, convexity 1.00 — the control behaving as a control should.</em></p>
+<p align="center"><em>Left: Villa Savoye, largest room non-convex and dominant. Right: Villa Rotonda, convexity 0.98 — the control behaving as a control should.</em></p>
 
 Floor plans are binarised, segmented into rooms by adaptive flood fill, and scored on three criteria:
 
@@ -128,9 +128,25 @@ Floor plans are binarised, segmented into rooms by adaptive flood fill, and scor
 - **Density** — is internal partition density low? (< 20%)
 - **Shape** — is the largest room non-convex? (convexity < 0.85), which distinguishes a flowing plan from one grand hall
 
-> 🔴 **Results pending re-run.** The internal wall density rule was found to be structurally degenerate — it measured wall pixels *inside* a room blob, but a room blob is by construction a connected component of not-wall, so the value was always `0.000` and the rule awarded its 30 points unconditionally to every building. This is fixed in the current notebook, but the stored outputs predate the fix. **The open-plan scores must be regenerated before they are reported anywhere.**
+| Building | Blob ratio | Wall density | Convexity | Score | Open plan |
+|---|---|---|---|---|---|
+| Villa Savoye | 0.34 | 0.094 | 0.71 | **100** | yes |
+| Casa das Canoas | 0.21 | 0.186 | 0.57 | **100** | yes |
+| Frey House II | 0.50 | 0.149 | 0.79 | **100** | yes |
+| Kaufmann Desert House | 0.15 | 0.179 | 0.79 | **70** | yes |
+| Villa Rotonda *(control)* | 0.14 | 0.021 | 0.98 | **30** | no |
 
-The Villa Rotonda control still behaves correctly regardless — convexity 1.00, a perfectly convex central hall, correctly classified as not open plan.
+The control behaves as a control should: convexity 0.98, a near-perfectly convex
+central hall, correctly classified as not open plan.
+
+> ⚠️ **A note on the density rule.** An earlier version of this scoring rule was
+> structurally degenerate — it counted wall pixels *inside* a room blob, but a room
+> blob is by construction a connected component of not-wall, so it always returned
+> `0.000` and awarded its 30 points unconditionally. It now measures partition
+> density within the room's convex hull, and returns real values. Note, however,
+> that **all five buildings still pass the < 0.20 threshold**, so on this sample the
+> rule is correct but carries no discriminating information. The work is being done
+> by area and convexity.
 
 ---
 
